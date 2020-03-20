@@ -32,7 +32,23 @@
     <camelContext id="_context1" xmlns="http://camel.apache.org/schema/blueprint">
         <route id="_route1">
             <from id="_from1" uri="file:src/data?noop=true"/>
-            <to id="_Received" uri="file:target/messages/received"/>
+            <choice id="_choice1">
+                <when id="_when1">
+                    <xpath>/order/orderline/quantity/text() &gt; 10</xpath>
+                    <log id="_log1" message="The quantity requested exceeds the maximum allowed - contact customer"/>
+                    <setHeader headerName="Destination" id="_setHeader1">
+                        <constant>Invalid</constant>
+                    </setHeader>
+                    <to id="_Invalid" uri="file:target/messages/invalidOrders"/>
+                </when>
+                <otherwise id="_elseValid">
+                    <log id="_log2" message="This is a valid order - OK to process"/>
+                    <setHeader headerName="Destination" id="_setHeader2">
+                        <constant>ReadyForDispatcher</constant>
+                    </setHeader>
+                    <to id="_Valid" uri="file:target/messages/validOrders"/>
+                </otherwise>
+            </choice>
         </route>
     </camelContext>
 </blueprint>
